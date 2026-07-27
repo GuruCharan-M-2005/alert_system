@@ -25,6 +25,11 @@ export default function App() {
           allowLocalhostAsSecureOrigin: true,
         });
 
+        // Request permission if not already granted
+        if (!OneSignal.Notifications.permission) {
+          await OneSignal.Notifications.requestPermission();
+        }
+
         // Grab existing subscription id
         const id = OneSignal.User.PushSubscription.id;
         if (id) {
