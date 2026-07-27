@@ -3,12 +3,14 @@ import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import Login from './components/Login';
 import AlertList from './components/AlertList';
-import { updatePlayerId } from './services/api';
+import { addSubscription } from './services/api';
 
 export default function App() {
-  const { user, playerId, setPlayerId } = useAuthStore();
+  const { setPlayerId } = useAuthStore();
 
   useEffect(() => {
+    if (window.__oneSignalInitialized) return;
+    window.__oneSignalInitialized = true;
     initOneSignal();
   }, []);
 
@@ -18,25 +20,28 @@ export default function App() {
       window.OneSignalDeferred.push(async function (OneSignal) {
         await OneSignal.init({
           appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+          safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
           notifyButton: { enable: false },
           allowLocalhostAsSecureOrigin: true,
         });
 
+        // Grab existing subscription id
+        const id = OneSignal.User.PushSubscription.id;
+        if (id) {
+          setPlayerId(id);
+          const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
+          if (storedUser?.id) await addSubscription(storedUser.id, id);
+        }
+
+        // Listen for new subscriptions
         OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          const id = event.current?.id;
-          if (id) {
-            setPlayerId(id);
-            // If user already logged in, sync player_id
+          const newId = event.current?.id;
+          if (newId) {
+            setPlayerId(newId);
             const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
-            if (storedUser?.id) {
-              await updatePlayerId(storedUser.id, id);
-            }
+            if (storedUser?.id) await addSubscription(storedUser.id, newId);
           }
         });
-
-        // Get existing player_id
-        const id = OneSignal.User.PushSubscription.id;
-        if (id) setPlayerId(id);
       });
     } catch (err) {
       console.warn('OneSignal init failed:', err);
