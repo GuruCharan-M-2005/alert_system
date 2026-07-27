@@ -8,7 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setUser, playerId } = useAuthStore();
+  const { setUser, setPlayerId } = useAuthStore();
 
   async function handleSubmit() {
     if (!email || !password) {
@@ -26,12 +26,19 @@ export default function Login() {
         return;
       }
 
-      // Save player_id to user row if available
-      if (playerId && res.user?.id) {
-        await updatePlayerId(res.user.id, playerId);
+      setUser(res.user);
+
+      // Read player_id directly from OneSignal at login time
+      try {
+        const currentPlayerId = window.OneSignal?.User?.PushSubscription?.id;
+        if (currentPlayerId) {
+          setPlayerId(currentPlayerId);
+          await updatePlayerId(res.user.id, currentPlayerId);
+        }
+      } catch (e) {
+        console.warn('player_id sync failed:', e);
       }
 
-      setUser(res.user);
       toast.success(isRegister ? 'Account created!' : 'Welcome back!');
     } catch {
       toast.error('Network error. Try again.');

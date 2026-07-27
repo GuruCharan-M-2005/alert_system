@@ -15,8 +15,7 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('alert_user');
-    localStorage.removeItem('alert_player_id');
+    localStorage.clear();
     set({ user: null, playerId: null });
   }
 }));
