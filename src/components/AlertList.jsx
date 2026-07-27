@@ -28,29 +28,32 @@ function timeLabel(scheduled_at) {
 
 export default function AlertList() {
   const { user, logout } = useAuthStore();
-
-  // Safety guard — should never happen but prevents crash
-  if (!user) return null;
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAlert, setEditingAlert] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  const userId = user?.id;
+
   const fetchAlerts = useCallback(async () => {
+    if (!userId) return;
     try {
-      const res = await getAlerts(user.id);
+      const res = await getAlerts(userId);
       if (res.success) setAlerts(res.alerts);
     } catch {
       toast.error('Failed to load alerts');
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [userId]);
 
   useEffect(() => {
     fetchAlerts();
   }, [fetchAlerts]);
+
+  // Redirect to login if no user
+  if (!user) return null;
 
   async function handleDelete(alert) {
     if (!window.confirm(`Delete "${alert.title}"?`)) return;
