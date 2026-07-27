@@ -5,7 +5,7 @@ import useAuthStore from '../store/authStore';
 import { format } from 'date-fns';
 
 export default function AlertForm({ alert, onClose, onSaved }) {
-  const { user, playerId } = useAuthStore();
+  const { user } = useAuthStore();
   const isEdit = !!alert;
 
   const [title, setTitle] = useState(alert?.title || '');
