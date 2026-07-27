@@ -6,7 +6,7 @@ import AlertList from './components/AlertList';
 import { addSubscription } from './services/api';
 
 export default function App() {
-  const { setPlayerId } = useAuthStore();
+  const { user, setPlayerId } = useAuthStore();
 
   useEffect(() => {
     if (window.__oneSignalInitialized) return;
