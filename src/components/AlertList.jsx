@@ -28,6 +28,9 @@ function timeLabel(scheduled_at) {
 
 export default function AlertList() {
   const { user, logout } = useAuthStore();
+
+  // Safety guard — should never happen but prevents crash
+  if (!user) return null;
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
