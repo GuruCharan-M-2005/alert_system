@@ -9,44 +9,34 @@ export default function App() {
   const { user, playerId, setPlayerId } = useAuthStore();
 
   useEffect(() => {
-    if (window.__oneSignalInitialized) return;
-    window.__oneSignalInitialized = true;
     initOneSignal();
   }, []);
 
   async function initOneSignal() {
-    
     try {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function (OneSignal) {
         await OneSignal.init({
           appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
-          safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
           notifyButton: { enable: false },
           allowLocalhostAsSecureOrigin: true,
         });
 
-        // Get id directly — don't wait for change event
-        const id = OneSignal.User.PushSubscription.id;
-        if (id) {
-          setPlayerId(id);
-          const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
-          if (storedUser?.id) {
-            await updatePlayerId(storedUser.id, id);
-          }
-        }
-
-        // Also listen for future changes
         OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          const newId = event.current?.id;
-          if (newId) {
-            setPlayerId(newId);
+          const id = event.current?.id;
+          if (id) {
+            setPlayerId(id);
+            // If user already logged in, sync player_id
             const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
             if (storedUser?.id) {
-              await updatePlayerId(storedUser.id, newId);
+              await updatePlayerId(storedUser.id, id);
             }
           }
         });
+
+        // Get existing player_id
+        const id = OneSignal.User.PushSubscription.id;
+        if (id) setPlayerId(id);
       });
     } catch (err) {
       console.warn('OneSignal init failed:', err);
