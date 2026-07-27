@@ -15,8 +15,8 @@ export const login = (email, password) =>
 export const register = (email, password) =>
   call({ action: 'register', email, password });
 
-export const updatePlayerId = (user_id, player_id) =>
-  call({ action: 'update_player_id', user_id, player_id });
+export const addSubscription = (user_id, player_id) =>
+  call({ action: 'add_subscription', user_id, player_id });
 
 // Alerts
 export const getAlerts = (user_id) =>

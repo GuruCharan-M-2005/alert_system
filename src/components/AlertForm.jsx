@@ -34,7 +34,7 @@ export default function AlertForm({ alert, onClose, onSaved }) {
       if (isEdit) {
         res = await editAlert({
           alert_id: alert.id,
-          player_id: playerId || user.onesignal_player_id,
+          user_id: user.id,
           title: title.trim(),
           message: message.trim(),
           scheduled_at: scheduled.toISOString()
@@ -42,7 +42,6 @@ export default function AlertForm({ alert, onClose, onSaved }) {
       } else {
         res = await createAlert({
           user_id: user.id,
-          player_id: playerId || user.onesignal_player_id,
           title: title.trim(),
           message: message.trim(),
           scheduled_at: scheduled.toISOString()

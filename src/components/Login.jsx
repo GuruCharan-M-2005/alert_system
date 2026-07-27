@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { login, register, updatePlayerId } from '../services/api';
+import { login, register, addSubscription } from '../services/api';
 import useAuthStore from '../store/authStore';
 
 export default function Login() {
@@ -8,7 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setUser, setPlayerId } = useAuthStore();
+  const { setUser } = useAuthStore();
 
   async function handleSubmit() {
     if (!email || !password) {
@@ -28,15 +28,14 @@ export default function Login() {
 
       setUser(res.user);
 
-      // Read player_id directly from OneSignal at login time
+      // Add this device's subscription to subscriptions sheet
       try {
-        const currentPlayerId = window.OneSignal?.User?.PushSubscription?.id;
-        if (currentPlayerId) {
-          setPlayerId(currentPlayerId);
-          await updatePlayerId(res.user.id, currentPlayerId);
+        const player_id = window.OneSignal?.User?.PushSubscription?.id;
+        if (player_id && res.user?.id) {
+          await addSubscription(res.user.id, player_id);
         }
       } catch (e) {
-        console.warn('player_id sync failed:', e);
+        console.warn('subscription sync failed:', e);
       }
 
       toast.success(isRegister ? 'Account created!' : 'Welcome back!');
