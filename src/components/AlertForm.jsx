@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { createAlert, editAlert } from '../services/api';
 import useAuthStore from '../store/authStore';
@@ -22,15 +22,11 @@ export default function AlertForm({ alert, onClose, onSaved }) {
     if (!scheduledAt) { toast.error('Pick a date and time'); return; }
 
     const scheduled = new Date(scheduledAt);
-    if (scheduled <= new Date()) {
-      toast.error('Schedule must be in the future');
-      return;
-    }
+    if (scheduled <= new Date()) { toast.error('Schedule must be in the future'); return; }
 
     setLoading(true);
     try {
       let res;
-
       if (isEdit) {
         res = await editAlert({
           alert_id: alert.id,
@@ -48,11 +44,7 @@ export default function AlertForm({ alert, onClose, onSaved }) {
         });
       }
 
-      if (!res.success) {
-        toast.error(res.error || 'Failed to save alert');
-        return;
-      }
-
+      if (!res.success) { toast.error(res.error || 'Failed to save alert'); return; }
       toast.success(isEdit ? 'Alert updated' : 'Alert created');
       onSaved();
     } catch {
@@ -66,8 +58,8 @@ export default function AlertForm({ alert, onClose, onSaved }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{isEdit ? 'Edit Alert' : 'New Alert'}</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <h2>{isEdit ? 'Edit alert' : 'New alert'}</h2>
+          <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="modal-body">
@@ -85,7 +77,7 @@ export default function AlertForm({ alert, onClose, onSaved }) {
           <div className="field">
             <label>Message <span className="optional">(optional)</span></label>
             <textarea
-              placeholder="Any extra details..."
+              placeholder="Any extra details…"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
@@ -106,7 +98,7 @@ export default function AlertForm({ alert, onClose, onSaved }) {
         <div className="modal-footer">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Alert'}
+            {loading ? 'Saving…' : isEdit ? 'Save changes' : 'Create alert'}
           </button>
         </div>
       </div>
