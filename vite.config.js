@@ -11,8 +11,8 @@ export default defineConfig({
       workbox: null,
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Alert App',
-        short_name: 'Alerts',
+        name: 'Alertify',
+        short_name: 'Alertify',
         description: 'Simple cross-platform alert system',
         theme_color: '#2563EB',
         background_color: '#FFFFFF',

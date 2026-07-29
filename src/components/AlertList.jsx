@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { getAlerts, deleteAlert } from '../services/api';
 import useAuthStore from '../store/authStore';
@@ -44,19 +44,27 @@ export default function AlertList() {
 
   const userId = user?.id;
 
-  const fetchAlerts = useCallback(async () => {
+  // silent=true → background refresh, no loading state, no error toast
+  const fetchAlerts = useCallback(async (silent = false) => {
     if (!userId) return;
     try {
       const res = await getAlerts(userId);
       if (res.success) setAlerts(res.alerts);
     } catch {
-      toast.error('Failed to load alerts');
+      if (!silent) toast.error('Failed to load alerts');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [userId]);
 
-  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+  // First load
+  useEffect(() => { fetchAlerts(false); }, [fetchAlerts]);
+
+  // Background poll every 3 seconds — completely silent
+  useEffect(() => {
+    const interval = setInterval(() => fetchAlerts(true), 3000);
+    return () => clearInterval(interval);
+  }, [fetchAlerts]);
 
   if (!user) return null;
 
@@ -81,8 +89,7 @@ export default function AlertList() {
   function handleSaved() {
     setShowForm(false);
     setEditingAlert(null);
-    setLoading(true);
-    fetchAlerts();
+    fetchAlerts(true);
   }
 
   const upcoming = alerts.filter((a) => !isPast(new Date(a.scheduled_at)));
