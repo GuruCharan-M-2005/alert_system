@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { getAlerts, deleteAlert } from '../services/api';
 import useAuthStore from '../store/authStore';
 import AlertForm from './AlertForm';
+import ChromeBanner from './ChromeBanner';
 import { format, isPast, differenceInHours, differenceInMinutes } from 'date-fns';
 
 function getUrgency(scheduled_at) {
@@ -98,6 +99,8 @@ export default function AlertList() {
           </div>
         </div>
       </header>
+
+      <ChromeBanner />
 
       {/* Main */}
       <main className="main">

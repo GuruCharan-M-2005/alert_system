@@ -124,6 +124,65 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; }
 .optional { font-weight: 400; color: var(--text-sub); }
 
 /* ============================================================
+   CHROME BANNER
+   ============================================================ */
+.chrome-banner {
+  background: #EFF4FF;
+  border-bottom: 1px solid #BFDBFE;
+}
+
+.chrome-banner-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chrome-banner-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.chrome-banner-icon { font-size: 16px; margin-top: 1px; }
+
+.chrome-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E40AF;
+  margin-bottom: 2px;
+}
+
+.chrome-banner-sub {
+  font-size: 12px;
+  color: #3B82F6;
+  line-height: 1.5;
+}
+
+.chrome-banner-sub strong { color: #1E40AF; }
+
+.chrome-banner-close {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563EB;
+  background: none;
+  border: 1.5px solid #2563EB;
+  border-radius: 6px;
+  padding: 5px 12px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.chrome-banner-close:hover {
+  background: #2563EB;
+  color: #fff;
+}
+
+/* ============================================================
    AUTH
    ============================================================ */
 .auth-container {
