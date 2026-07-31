@@ -663,3 +663,49 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ============================================================
+   GOOGLE SIGN IN BUTTON
+   ============================================================ */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 18px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-google:hover:not(:disabled) {
+  border-color: var(--border-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   NAV AVATAR
+   ============================================================ */
+.nav-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  object-fit: cover;
+}

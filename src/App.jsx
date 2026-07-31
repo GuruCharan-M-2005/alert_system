@@ -1,57 +1,21 @@
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 import useAuthStore from './store/authStore';
 import Login from './components/Login';
 import AlertList from './components/AlertList';
-import { addSubscription } from './services/api';
 
 export default function App() {
-  const { user, setPlayerId } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   useEffect(() => {
-    if (window.__oneSignalInitialized) return;
-    window.__oneSignalInitialized = true;
-    initOneSignal();
-  }, []);
-
-  async function initOneSignal() {
-    try {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function (OneSignal) {
-        await OneSignal.init({
-          appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
-          safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
-          notifyButton: { enable: false },
-          allowLocalhostAsSecureOrigin: true,
-        });
-
-        // Request permission if not already granted
-        if (!OneSignal.Notifications.permission) {
-          await OneSignal.Notifications.requestPermission();
-        }
-
-        // Grab existing subscription id
-        const id = OneSignal.User.PushSubscription.id;
-        if (id) {
-          setPlayerId(id);
-          const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
-          if (storedUser?.id) await addSubscription(storedUser.id, id);
-        }
-
-        // Listen for new subscriptions
-        OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          const newId = event.current?.id;
-          if (newId) {
-            setPlayerId(newId);
-            const storedUser = JSON.parse(localStorage.getItem('alert_user') || 'null');
-            if (storedUser?.id) await addSubscription(storedUser.id, newId);
-          }
-        });
-      });
-    } catch (err) {
-      console.warn('OneSignal init failed:', err);
-    }
-  }
+    // Firebase Auth listener — persists session automatically
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser || null);
+    });
+    return () => unsubscribe();
+  }, [setUser]);
 
   return (
     <>
@@ -61,8 +25,8 @@ export default function App() {
           style: {
             fontFamily: 'Inter, sans-serif',
             fontSize: '14px',
-            borderRadius: '10px',
-            border: '1px solid #E5E5E5',
+            borderRadius: '6px',
+            border: '1px solid #E2E2E2',
             boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
           }
         }}

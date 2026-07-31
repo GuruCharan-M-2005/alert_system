@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { createAlert, editAlert } from '../services/api';
+import { createAlert, updateAlert } from '../services/firestore';
+import { createTask, updateTask } from '../services/tasks';
 import useAuthStore from '../store/authStore';
 import { format } from 'date-fns';
 
 export default function AlertForm({ alert, onClose, onSaved }) {
-  const { user } = useAuthStore();
+  const { user, accessToken } = useAuthStore();
   const isEdit = !!alert;
 
   const [title, setTitle] = useState(alert?.title || '');
@@ -24,31 +25,59 @@ export default function AlertForm({ alert, onClose, onSaved }) {
     const scheduled = new Date(scheduledAt);
     if (scheduled <= new Date()) { toast.error('Schedule must be in the future'); return; }
 
+    if (!accessToken) {
+      toast.error('Session expired. Please sign in again.');
+      return;
+    }
+
     setLoading(true);
     try {
-      let res;
+      const scheduled_at = scheduled.toISOString();
+
       if (isEdit) {
-        res = await editAlert({
-          alert_id: alert.id,
-          user_id: user.id,
+        // Update Google Task
+        await updateTask(accessToken, {
+          list_id: alert.list_id,
+          task_id: alert.task_id,
           title: title.trim(),
           message: message.trim(),
-          scheduled_at: scheduled.toISOString()
+          scheduled_at
         });
+
+        // Update Firestore
+        await updateAlert(alert.id, {
+          title: title.trim(),
+          message: message.trim(),
+          scheduled_at,
+          task_id: alert.task_id,
+          list_id: alert.list_id
+        });
+
+        toast.success('Alert updated');
       } else {
-        res = await createAlert({
-          user_id: user.id,
+        // Create Google Task
+        const { task_id, list_id } = await createTask(accessToken, {
           title: title.trim(),
           message: message.trim(),
-          scheduled_at: scheduled.toISOString()
+          scheduled_at
         });
+
+        // Save to Firestore
+        await createAlert(user.uid, {
+          title: title.trim(),
+          message: message.trim(),
+          scheduled_at,
+          task_id,
+          list_id
+        });
+
+        toast.success('Alert created');
       }
 
-      if (!res.success) { toast.error(res.error || 'Failed to save alert'); return; }
-      toast.success(isEdit ? 'Alert updated' : 'Alert created');
       onSaved();
-    } catch {
-      toast.error('Network error. Try again.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save. Try again.');
     } finally {
       setLoading(false);
     }

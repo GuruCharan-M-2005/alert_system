@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { getAlerts, deleteAlert } from '../services/api';
+import { getAlerts, deleteAlert } from '../services/firestore';
+import { deleteTask } from '../services/tasks';
+import { logOut } from '../services/auth';
 import useAuthStore from '../store/authStore';
 import AlertForm from './AlertForm';
 import ChromeBanner from './ChromeBanner';
@@ -35,21 +37,20 @@ function timeLabel(scheduled_at) {
 }
 
 export default function AlertList() {
-  const { user, logout } = useAuthStore();
+  const { user, accessToken, logout } = useAuthStore();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAlert, setEditingAlert] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const userId = user?.id;
+  const userId = user?.uid;
 
-  // silent=true → background refresh, no loading state, no error toast
   const fetchAlerts = useCallback(async (silent = false) => {
     if (!userId) return;
     try {
-      const res = await getAlerts(userId);
-      if (res.success) setAlerts(res.alerts);
+      const data = await getAlerts(userId);
+      setAlerts(data);
     } catch {
       if (!silent) toast.error('Failed to load alerts');
     } finally {
@@ -60,7 +61,7 @@ export default function AlertList() {
   // First load
   useEffect(() => { fetchAlerts(false); }, [fetchAlerts]);
 
-  // Background poll every 3 seconds — completely silent
+  // Background poll every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => fetchAlerts(true), 3000);
     return () => clearInterval(interval);
@@ -72,18 +73,27 @@ export default function AlertList() {
     if (!window.confirm(`Delete "${alert.title}"?`)) return;
     setDeletingId(alert.id);
     try {
-      const res = await deleteAlert(alert.id);
-      if (res.success) {
-        setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-        toast.success('Alert deleted');
-      } else {
-        toast.error(res.error || 'Delete failed');
+      // Delete from Google Tasks
+      if (accessToken && alert.task_id && alert.list_id) {
+        await deleteTask(accessToken, {
+          list_id: alert.list_id,
+          task_id: alert.task_id
+        });
       }
+      // Delete from Firestore
+      await deleteAlert(alert.id);
+      setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+      toast.success('Alert deleted');
     } catch {
-      toast.error('Network error');
+      toast.error('Delete failed');
     } finally {
       setDeletingId(null);
     }
+  }
+
+  async function handleLogout() {
+    await logOut();
+    logout();
   }
 
   function handleSaved() {
@@ -104,8 +114,11 @@ export default function AlertList() {
             <span className="nav-title">Alertify</span>
           </div>
           <div className="nav-right">
-            <span className="nav-email">{user.email}</span>
-            <button className="btn-logout" onClick={logout}>Sign out</button>
+            {user.photoURL && (
+              <img src={user.photoURL} alt="avatar" className="nav-avatar" />
+            )}
+            <span className="nav-email">{user.displayName || user.email}</span>
+            <button className="btn-logout" onClick={handleLogout}>Sign out</button>
           </div>
         </div>
       </header>
@@ -157,7 +170,6 @@ export default function AlertList() {
                 </div>
               </section>
             )}
-
             {past.length > 0 && (
               <section className="alert-section">
                 <div className="section-label">Past — {past.length}</div>

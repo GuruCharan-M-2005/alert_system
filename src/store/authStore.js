@@ -1,22 +1,14 @@
 import { create } from 'zustand';
 
 const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('alert_user') || 'null'),
-  playerId: localStorage.getItem('alert_player_id') || null,
+  user: null,
+  accessToken: null,
 
-  setUser: (user) => {
-    localStorage.setItem('alert_user', JSON.stringify(user));
-    set({ user });
-  },
-
-  setPlayerId: (playerId) => {
-    localStorage.setItem('alert_player_id', playerId);
-    set({ playerId });
-  },
+  setUser: (user) => set({ user }),
+  setAccessToken: (accessToken) => set({ accessToken }),
 
   logout: () => {
-    localStorage.clear();
-    set({ user: null, playerId: null });
+    set({ user: null, accessToken: null });
   }
 }));
 
