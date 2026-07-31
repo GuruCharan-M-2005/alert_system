@@ -14,7 +14,10 @@ export default function Terms() {
             <div className="nav-logo-mark"><BellIcon /></div>
             <span className="nav-title">Alertify</span>
           </div>
-          <a href="/" className="btn-logout" style={{ textDecoration: 'none' }}>← Back</a>
+          <div className="nav-right">
+            <a href="/privacy" className="legal-nav-link">Privacy</a>
+            <a href="/" className="btn-logout" style={{ textDecoration: 'none' }}>← Back</a>
+          </div>
         </div>
       </header>
 
@@ -79,6 +82,20 @@ export default function Terms() {
           </p>
         </section>
       </main>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <div className="footer-logo-mark"><BellIcon /></div>
+            <span className="footer-name">Alertify</span>
+          </div>
+          <div className="footer-links">
+            <a href="/privacy" className="footer-link">Privacy</a>
+            <span className="footer-sep">·</span>
+            <a href="/terms" className="footer-link" style={{color: 'var(--text)', fontWeight: 600}}>Terms</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import Login from './components/Login';
 import AlertList from './components/AlertList';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
-import { getStoredToken, refreshAccessToken } from './services/auth';
+import { getStoredToken, refreshAccessToken, handleRedirectResult } from './services/auth';
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
@@ -16,20 +16,40 @@ export default function App() {
   useEffect(() => {
     if (path === '/privacy' || path === '/terms') return;
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser || null);
+    async function init() {
+      // Step 1 — handle mobile redirect result FIRST before auth listener
+      const redirectResult = await handleRedirectResult();
+      if (redirectResult?.accessToken) {
+        setAccessToken(redirectResult.accessToken);
+      }
 
-      if (firebaseUser) {
-        const stored = getStoredToken();
-        if (stored) {
-          setAccessToken(stored);
-        } else {
+      // Step 2 — Firebase auth state listener
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setUser(firebaseUser || null);
+
+        if (firebaseUser) {
+          // Already got token from redirect above — skip
+          if (redirectResult?.accessToken) return;
+
+          // Try sessionStorage first
+          const stored = getStoredToken();
+          if (stored) {
+            setAccessToken(stored);
+            return;
+          }
+
+          // Desktop only — silent refresh via popup
           const fresh = await refreshAccessToken();
           if (fresh) setAccessToken(fresh);
         }
-      }
-    });
-    return () => unsubscribe();
+      });
+
+      return unsubscribe;
+    }
+
+    let unsubscribe;
+    init().then(fn => { unsubscribe = fn; });
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [setUser, setAccessToken, path]);
 
   if (path === '/privacy') return <Privacy />;

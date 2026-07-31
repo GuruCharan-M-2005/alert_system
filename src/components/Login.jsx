@@ -35,9 +35,11 @@ export default function Login() {
   async function handleGoogleLogin() {
     setLoading(true);
     try {
-      const { user, accessToken } = await signInWithGoogle();
-      if (accessToken) setAccessToken(accessToken);
-      toast.success(`Welcome, ${user.displayName?.split(' ')[0]}!`);
+      const result = await signInWithGoogle();
+      // On mobile, result is null — redirect is happening, do nothing
+      if (!result) return;
+      if (result.accessToken) setAccessToken(result.accessToken);
+      toast.success(`Welcome, ${result.user.displayName?.split(' ')[0]}!`);
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         toast.error('Sign in failed. Try again.');

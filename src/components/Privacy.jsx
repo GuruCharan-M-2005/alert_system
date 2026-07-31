@@ -14,7 +14,10 @@ export default function Privacy() {
             <div className="nav-logo-mark"><BellIcon /></div>
             <span className="nav-title">Alertify</span>
           </div>
-          <a href="/" className="btn-logout" style={{ textDecoration: 'none' }}>← Back</a>
+          <div className="nav-right">
+            <a href="/terms" className="legal-nav-link">Terms</a>
+            <a href="/" className="btn-logout" style={{ textDecoration: 'none' }}>← Back</a>
+          </div>
         </div>
       </header>
 
@@ -85,6 +88,20 @@ export default function Privacy() {
           </p>
         </section>
       </main>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <div className="footer-logo-mark"><BellIcon /></div>
+            <span className="footer-name">Alertify</span>
+          </div>
+          <div className="footer-links">
+            <a href="/privacy" className="footer-link" style={{color: 'var(--text)', fontWeight: 600}}>Privacy</a>
+            <span className="footer-sep">·</span>
+            <a href="/terms" className="footer-link">Terms</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

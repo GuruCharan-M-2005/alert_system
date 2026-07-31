@@ -1003,3 +1003,18 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Legal nav link in navbar */
+.legal-nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.12s, background 0.12s;
+}
+.legal-nav-link:hover {
+  color: var(--text);
+  background: var(--surface);
+}
