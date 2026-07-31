@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
@@ -11,49 +11,55 @@ import { getStoredToken, handleRedirectResult, silentRefreshToken } from './serv
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
+  const [initializing, setInitializing] = useState(true);
   const path = window.location.pathname;
 
   useEffect(() => {
-    if (path === '/privacy' || path === '/terms') return;
+    if (path === '/privacy' || path === '/terms') {
+      setInitializing(false);
+      return;
+    }
 
     async function init() {
-      // Handle mobile redirect result ONLY if a redirect was pending
+      // Step 1 — handle redirect result first (mobile)
       const redirectResult = await handleRedirectResult();
       if (redirectResult?.accessToken) {
         setAccessToken(redirectResult.accessToken);
       }
 
-      // Firebase auth state listener
+      // Step 2 — now listen to auth state
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         setUser(firebaseUser || null);
 
         if (firebaseUser) {
-          // Use token from redirect if just captured
-          if (redirectResult?.accessToken) return;
-
-          // Otherwise restore from sessionStorage
-          const stored = getStoredToken();
-          if (stored) setAccessToken(stored);
-          // If no stored token — user needs to sign in again to get Tasks token
-          // No silent popup — avoids double tab issue
+          if (redirectResult?.accessToken) {
+            // Already got token from redirect
+          } else {
+            const stored = getStoredToken();
+            if (stored) setAccessToken(stored);
+          }
         }
+
+        // Done initializing — now safe to show Login or AlertList
+        setInitializing(false);
       });
 
       return unsubscribe;
     }
 
     let unsubscribe;
-    init().then(fn => { unsubscribe = fn; });
-
-    // Desktop only — refresh token every 50 minutes in background
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     let refreshInterval;
-    if (!isMobile) {
-      refreshInterval = setInterval(async () => {
-        const token = await silentRefreshToken();
-        if (token) setAccessToken(token);
-      }, 50 * 60 * 1000);
-    }
+
+    init().then(fn => {
+      unsubscribe = fn;
+      if (!isMobile) {
+        refreshInterval = setInterval(async () => {
+          const token = await silentRefreshToken();
+          if (token) setAccessToken(token);
+        }, 50 * 60 * 1000);
+      }
+    });
 
     return () => {
       if (unsubscribe) unsubscribe();
@@ -63,6 +69,20 @@ export default function App() {
 
   if (path === '/privacy') return <Privacy />;
   if (path === '/terms') return <Terms />;
+
+  // Wait until Firebase + redirect result both resolved
+  if (initializing) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { signInWithGoogle } from '../services/auth';
 import useAuthStore from '../store/authStore';
+import PopupBanner from './PopupBanner';
 
 function isMobile() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -58,6 +59,7 @@ export default function Login() {
 
   return (
     <div className="auth-container">
+      <PopupBanner />
       <div className="auth-card">
         <div className="auth-logo">
           <div className="auth-logo-mark">
