@@ -1087,3 +1087,26 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
 }
 
 .popup-banner-close:hover { opacity: 1; }
+
+/* Popup blocked notice */
+.popup-blocked-notice {
+  padding: 12px 14px;
+  background: #FFF7ED;
+  border: 1.5px solid #FED7AA;
+  border-radius: var(--radius);
+}
+
+.popup-blocked-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #C2410C;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popup-blocked-text {
+  font-size: 12px;
+  color: #EA580C;
+  line-height: 1.5;
+}

@@ -7,7 +7,7 @@ import Login from './components/Login';
 import AlertList from './components/AlertList';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
-import { getStoredToken, handleRedirectResult, silentRefreshToken } from './services/auth';
+import { getStoredToken, silentRefreshToken } from './services/auth';
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
@@ -20,67 +20,29 @@ export default function App() {
       return;
     }
 
-    async function init() {
-      // Step 1 — handle redirect result first (mobile)
-      let redirectResult = null;
-      try {
-        redirectResult = await handleRedirectResult();
-        if (redirectResult?.accessToken) {
-          setAccessToken(redirectResult.accessToken);
-        }
-        // Log to localStorage so we can read it on login page
-        localStorage.setItem('debug_redirect', JSON.stringify({
-          time: new Date().toISOString(),
-          hasResult: !!redirectResult,
-          hasToken: !!redirectResult?.accessToken,
-          pendingWasSet: localStorage.getItem('alertify_redirect_pending_debug') || 'unknown'
-        }));
-      } catch (err) {
-        localStorage.setItem('debug_redirect_err', err.message);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser || null);
+
+      if (firebaseUser) {
+        const stored = getStoredToken();
+        if (stored) setAccessToken(stored);
       }
 
-      // Step 2 — now listen to auth state
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        localStorage.setItem('debug_auth', JSON.stringify({
-          time: new Date().toISOString(),
-          hasUser: !!firebaseUser,
-          uid: firebaseUser?.uid || null
-        }));
-
-        setUser(firebaseUser || null);
-
-        if (firebaseUser) {
-          if (redirectResult?.accessToken) {
-            // Already got token from redirect
-          } else {
-            const stored = getStoredToken();
-            if (stored) setAccessToken(stored);
-          }
-        }
-
-        // Done initializing — now safe to show Login or AlertList
-        setInitializing(false);
-      });
-
-      return unsubscribe;
-    }
-
-    let unsubscribe;
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    let refreshInterval;
-
-    init().then(fn => {
-      unsubscribe = fn;
-      if (!isMobile) {
-        refreshInterval = setInterval(async () => {
-          const token = await silentRefreshToken();
-          if (token) setAccessToken(token);
-        }, 50 * 60 * 1000);
-      }
+      setInitializing(false);
     });
 
+    // Desktop only — refresh token every 50 minutes
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    let refreshInterval;
+    if (!isMobile) {
+      refreshInterval = setInterval(async () => {
+        const token = await silentRefreshToken();
+        if (token) setAccessToken(token);
+      }, 50 * 60 * 1000);
+    }
+
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubscribe();
       if (refreshInterval) clearInterval(refreshInterval);
     };
   }, [setUser, setAccessToken, path]);
@@ -88,15 +50,9 @@ export default function App() {
   if (path === '/privacy') return <Privacy />;
   if (path === '/terms') return <Terms />;
 
-  // Wait until Firebase + redirect result both resolved
   if (initializing) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="spinner" />
       </div>
     );

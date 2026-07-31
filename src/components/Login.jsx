@@ -2,11 +2,6 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { signInWithGoogle } from '../services/auth';
 import useAuthStore from '../store/authStore';
-import PopupBanner from './PopupBanner';
-
-function isMobile() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
 
 const BellIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -25,64 +20,31 @@ const GoogleIcon = () => (
 );
 
 const steps = [
-  { icon: '🔐', text: 'Click "Continue with Google" below' },
-  { icon: '⚠️', text: 'Google shows a warning — click "Advanced"' },
+  { icon: '⚠️', text: 'Google shows an "unverified app" warning — click "Advanced"' },
   { icon: '→',  text: 'Click "Go to Alertify (unsafe)"' },
   { icon: '☑️', text: 'Check the Google Tasks checkbox' },
   { icon: '✅', text: 'Click "Continue" — you\'re in!' },
 ];
 
-function DebugPanel() {
-  const redirect = localStorage.getItem('debug_redirect');
-  const auth = localStorage.getItem('debug_auth');
-  const err = localStorage.getItem('debug_redirect_err');
-  const pending = localStorage.getItem('alertify_redirect_pending');
-
-  if (!redirect && !auth) return null;
-
-  return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: '#0A0A0A', color: '#00FF00', padding: '12px',
-      fontSize: '10px', fontFamily: 'monospace', zIndex: 9999,
-      maxHeight: '40vh', overflowY: 'auto'
-    }}>
-      <div><strong>REDIRECT:</strong> {redirect || 'none'}</div>
-      <div><strong>AUTH:</strong> {auth || 'none'}</div>
-      <div><strong>ERR:</strong> {err || 'none'}</div>
-      <div><strong>PENDING:</strong> {pending || 'none'}</div>
-      <button
-        onClick={() => {
-          ['debug_redirect','debug_auth','debug_redirect_err','alertify_redirect_pending'].forEach(k => localStorage.removeItem(k));
-          window.location.reload();
-        }}
-        style={{marginTop: '8px', padding: '4px 8px', fontSize: '10px', cursor: 'pointer'}}
-      >
-        Clear & Reload
-      </button>
-    </div>
-  );
-}
-
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
   const { setAccessToken } = useAuthStore();
 
   async function handleGoogleLogin() {
     setLoading(true);
+    setPopupBlocked(false);
     try {
-      const result = await signInWithGoogle();
-      // On mobile result is null — redirect happening, do nothing
-      if (!result) return;
-      if (result.accessToken) setAccessToken(result.accessToken);
-      toast.success(`Welcome, ${result.user.displayName?.split(' ')[0]}!`);
+      const { user, accessToken } = await signInWithGoogle();
+      if (accessToken) setAccessToken(accessToken);
+      toast.success(`Welcome, ${user.displayName?.split(' ')[0]}!`);
     } catch (err) {
-      // On mobile, errors during redirect are non-fatal — don't show toast
-      if (!isMobile()) {
-        if (err.code !== 'auth/popup-closed-by-user') {
-          toast.error('Sign in failed. Try again.');
-        }
+      if (err.code === 'auth/popup-blocked') {
+        setPopupBlocked(true);
+      } else if (err.code !== 'auth/popup-closed-by-user') {
+        toast.error('Sign in failed. Try again.');
+        console.error(err);
       }
     } finally {
       setLoading(false);
@@ -91,18 +53,23 @@ export default function Login() {
 
   return (
     <div className="auth-container">
-      <PopupBanner />
       <div className="auth-card">
         <div className="auth-logo">
-          <div className="auth-logo-mark">
-            <BellIcon />
-          </div>
+          <div className="auth-logo-mark"><BellIcon /></div>
           <span className="auth-logo-title">Alertify</span>
           <span className="auth-logo-sub">Notifications that actually arrive.</span>
         </div>
 
         <div className="auth-form">
-          {/* First time notice */}
+          {popupBlocked && (
+            <div className="popup-blocked-notice">
+              <p className="popup-blocked-title">⚠️ Popup blocked</p>
+              <p className="popup-blocked-text">
+                Tap the address bar → lock icon → Site settings → Pop-ups and redirects → <strong>Allow</strong>, then try again.
+              </p>
+            </div>
+          )}
+
           <div className="auth-notice">
             <button
               className="auth-notice-toggle"
@@ -115,8 +82,7 @@ export default function Login() {
             {showSteps && (
               <div className="auth-steps">
                 <p className="auth-steps-intro">
-                  Google will show an "unverified app" warning — that's normal.
-                  Just follow these steps:
+                  Google will show an "unverified app" warning — that's normal. Just follow these steps:
                 </p>
                 <ol className="auth-steps-list">
                   {steps.map((s, i) => (
@@ -137,14 +103,7 @@ export default function Login() {
             onClick={handleGoogleLogin}
             disabled={loading}
           >
-            {loading ? (
-              <span>Signing in…</span>
-            ) : (
-              <>
-                <GoogleIcon />
-                <span>Continue with Google</span>
-              </>
-            )}
+            {loading ? <span>Opening Google…</span> : <><GoogleIcon /><span>Continue with Google</span></>}
           </button>
 
           <p className="auth-note">
