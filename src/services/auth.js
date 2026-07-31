@@ -9,6 +9,7 @@ import { auth, googleProvider } from '../firebase';
 
 const TOKEN_KEY = 'alertify_gtoken';
 const TOKEN_EXPIRY_KEY = 'alertify_gtoken_exp';
+const REDIRECT_PENDING_KEY = 'alertify_redirect_pending';
 
 export function saveToken(token) {
   sessionStorage.setItem(TOKEN_KEY, token);
@@ -32,11 +33,11 @@ function isMobile() {
 
 export async function signInWithGoogle() {
   if (isMobile()) {
-    // Mobile — use redirect (more reliable than popup)
+    // Mark that a redirect is in progress so we know to handle it on return
+    sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
     await signInWithRedirect(auth, googleProvider);
-    return null; // page will redirect, nothing to return
+    return null;
   } else {
-    // Desktop — use popup
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const accessToken = credential?.accessToken;
@@ -45,9 +46,13 @@ export async function signInWithGoogle() {
   }
 }
 
-// Called on page load to handle redirect result on mobile
+// Only called when we know a redirect was pending — avoids spurious calls
 export async function handleRedirectResult() {
+  const pending = sessionStorage.getItem(REDIRECT_PENDING_KEY);
+  if (!pending) return null;
+
   try {
+    sessionStorage.removeItem(REDIRECT_PENDING_KEY);
     const result = await getRedirectResult(auth);
     if (result) {
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -62,27 +67,9 @@ export async function handleRedirectResult() {
   }
 }
 
-export async function refreshAccessToken() {
-  try {
-    if (isMobile()) {
-      // On mobile, can't silently refresh — use stored token only
-      return getStoredToken();
-    }
-    googleProvider.setCustomParameters({ prompt: 'none' });
-    const result = await signInWithPopup(auth, googleProvider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential?.accessToken;
-    if (token) saveToken(token);
-    googleProvider.setCustomParameters({});
-    return token;
-  } catch {
-    googleProvider.setCustomParameters({});
-    return null;
-  }
-}
-
 export async function logOut() {
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+  sessionStorage.removeItem(REDIRECT_PENDING_KEY);
   await signOut(auth);
 }

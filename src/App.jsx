@@ -7,7 +7,7 @@ import Login from './components/Login';
 import AlertList from './components/AlertList';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
-import { getStoredToken, refreshAccessToken, handleRedirectResult } from './services/auth';
+import { getStoredToken, handleRedirectResult } from './services/auth';
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
@@ -17,30 +17,25 @@ export default function App() {
     if (path === '/privacy' || path === '/terms') return;
 
     async function init() {
-      // Step 1 — handle mobile redirect result FIRST before auth listener
+      // Handle mobile redirect result ONLY if a redirect was pending
       const redirectResult = await handleRedirectResult();
       if (redirectResult?.accessToken) {
         setAccessToken(redirectResult.accessToken);
       }
 
-      // Step 2 — Firebase auth state listener
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Firebase auth state listener
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         setUser(firebaseUser || null);
 
         if (firebaseUser) {
-          // Already got token from redirect above — skip
+          // Use token from redirect if just captured
           if (redirectResult?.accessToken) return;
 
-          // Try sessionStorage first
+          // Otherwise restore from sessionStorage
           const stored = getStoredToken();
-          if (stored) {
-            setAccessToken(stored);
-            return;
-          }
-
-          // Desktop only — silent refresh via popup
-          const fresh = await refreshAccessToken();
-          if (fresh) setAccessToken(fresh);
+          if (stored) setAccessToken(stored);
+          // If no stored token — user needs to sign in again to get Tasks token
+          // No silent popup — avoids double tab issue
         }
       });
 
