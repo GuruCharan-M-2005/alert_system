@@ -3,6 +3,10 @@ import toast from 'react-hot-toast';
 import { signInWithGoogle } from '../services/auth';
 import useAuthStore from '../store/authStore';
 
+function isMobile() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 const BellIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -36,13 +40,16 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await signInWithGoogle();
-      // On mobile, result is null — redirect is happening, do nothing
+      // On mobile result is null — redirect happening, do nothing
       if (!result) return;
       if (result.accessToken) setAccessToken(result.accessToken);
       toast.success(`Welcome, ${result.user.displayName?.split(' ')[0]}!`);
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        toast.error('Sign in failed. Try again.');
+      // On mobile, errors during redirect are non-fatal — don't show toast
+      if (!isMobile()) {
+        if (err.code !== 'auth/popup-closed-by-user') {
+          toast.error('Sign in failed. Try again.');
+        }
       }
     } finally {
       setLoading(false);

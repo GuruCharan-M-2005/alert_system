@@ -7,7 +7,7 @@ import Login from './components/Login';
 import AlertList from './components/AlertList';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
-import { getStoredToken, handleRedirectResult } from './services/auth';
+import { getStoredToken, handleRedirectResult, silentRefreshToken } from './services/auth';
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
@@ -44,7 +44,21 @@ export default function App() {
 
     let unsubscribe;
     init().then(fn => { unsubscribe = fn; });
-    return () => { if (unsubscribe) unsubscribe(); };
+
+    // Desktop only — refresh token every 50 minutes in background
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    let refreshInterval;
+    if (!isMobile) {
+      refreshInterval = setInterval(async () => {
+        const token = await silentRefreshToken();
+        if (token) setAccessToken(token);
+      }, 50 * 60 * 1000);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
   }, [setUser, setAccessToken, path]);
 
   if (path === '/privacy') return <Privacy />;

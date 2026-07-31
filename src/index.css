@@ -1018,3 +1018,17 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
   color: var(--text);
   background: var(--surface);
 }
+
+/* Re-auth notice in modal */
+.reauth-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--urgent-tint);
+  border: 1.5px solid #FECACA;
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--urgent);
+  font-weight: 500;
+}

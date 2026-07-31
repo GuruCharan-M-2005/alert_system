@@ -12,19 +12,20 @@ const TOKEN_EXPIRY_KEY = 'alertify_gtoken_exp';
 const REDIRECT_PENDING_KEY = 'alertify_redirect_pending';
 
 export function saveToken(token) {
-  sessionStorage.setItem(TOKEN_KEY, token);
+  // Use localStorage so it survives redirects on mobile
+  localStorage.setItem(TOKEN_KEY, token);
   const expiry = Date.now() + 55 * 60 * 1000;
-  sessionStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
+  localStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
 }
 
 export function getStoredToken() {
-  const expiry = parseInt(sessionStorage.getItem(TOKEN_EXPIRY_KEY) || '0');
+  const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || '0');
   if (Date.now() > expiry) {
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
     return null;
   }
-  return sessionStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 function isMobile() {
@@ -33,9 +34,14 @@ function isMobile() {
 
 export async function signInWithGoogle() {
   if (isMobile()) {
-    // Mark that a redirect is in progress so we know to handle it on return
-    sessionStorage.setItem(REDIRECT_PENDING_KEY, 'true');
-    await signInWithRedirect(auth, googleProvider);
+    // Use localStorage — survives page redirect on mobile browsers
+    localStorage.setItem(REDIRECT_PENDING_KEY, 'true');
+    try {
+      await signInWithRedirect(auth, googleProvider);
+    } catch (err) {
+      // Some browsers throw before redirect — ignore, redirect still happens
+      console.warn('Redirect warning (safe to ignore):', err);
+    }
     return null;
   } else {
     const result = await signInWithPopup(auth, googleProvider);
@@ -46,13 +52,13 @@ export async function signInWithGoogle() {
   }
 }
 
-// Only called when we know a redirect was pending — avoids spurious calls
+// Called on page load — only processes if redirect was pending
 export async function handleRedirectResult() {
-  const pending = sessionStorage.getItem(REDIRECT_PENDING_KEY);
+  const pending = localStorage.getItem(REDIRECT_PENDING_KEY);
   if (!pending) return null;
 
   try {
-    sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+    localStorage.removeItem(REDIRECT_PENDING_KEY);
     const result = await getRedirectResult(auth);
     if (result) {
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -63,13 +69,31 @@ export async function handleRedirectResult() {
     return null;
   } catch (err) {
     console.error('Redirect result error:', err);
+    localStorage.removeItem(REDIRECT_PENDING_KEY);
     return null;
   }
 }
 
 export async function logOut() {
-  sessionStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
-  sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  localStorage.removeItem(REDIRECT_PENDING_KEY);
   await signOut(auth);
+}
+
+// Desktop only — silently refresh token via popup every 50 minutes
+export async function silentRefreshToken() {
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return null;
+  try {
+    googleProvider.setCustomParameters({ prompt: 'none' });
+    const result = await signInWithPopup(auth, googleProvider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential?.accessToken;
+    if (token) saveToken(token);
+    googleProvider.setCustomParameters({});
+    return token;
+  } catch {
+    googleProvider.setCustomParameters({});
+    return null;
+  }
 }

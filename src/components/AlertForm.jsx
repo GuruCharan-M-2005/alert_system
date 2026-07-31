@@ -5,6 +5,10 @@ import { createTask, deleteTask } from '../services/tasks';
 import useAuthStore from '../store/authStore';
 import { format } from 'date-fns';
 
+function isMobile() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 export default function AlertForm({ alert, onClose, onSaved }) {
   const { user, accessToken } = useAuthStore();
   const isEdit = !!alert;
@@ -26,8 +30,24 @@ export default function AlertForm({ alert, onClose, onSaved }) {
     if (scheduled <= new Date()) { toast.error('Schedule must be in the future'); return; }
 
     if (!accessToken) {
-      toast.error('Session expired. Please sign in again.');
-      return;
+      toast.error(
+        isMobile()
+          ? 'Session expired — sign out and sign in again.'
+          : 'Session expired — signing you back in…',
+        { duration: 4000 }
+      );
+      if (!isMobile()) {
+        // Desktop — try silent refresh
+        const { silentRefreshToken } = await import('../services/auth');
+        const token = await silentRefreshToken();
+        if (token) {
+          useAuthStore.getState().setAccessToken(token);
+        } else {
+          return;
+        }
+      } else {
+        return;
+      }
     }
 
     setLoading(true);
@@ -94,6 +114,8 @@ export default function AlertForm({ alert, onClose, onSaved }) {
     }
   }
 
+  const tokenMissing = !accessToken;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -103,6 +125,12 @@ export default function AlertForm({ alert, onClose, onSaved }) {
         </div>
 
         <div className="modal-body">
+          {tokenMissing && (
+            <div className="reauth-notice">
+              <span>⚠️ Session expired.</span>
+              <span>Sign out and sign in again to continue.</span>
+            </div>
+          )}
           <div className="field">
             <label>Title</label>
             <input
