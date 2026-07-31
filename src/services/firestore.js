@@ -1,6 +1,6 @@
 import {
   collection, addDoc, getDocs, updateDoc, deleteDoc,
-  doc, query, where, orderBy, serverTimestamp
+  doc, query, where, serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -10,11 +10,11 @@ const ALERTS = 'alerts';
 export async function getAlerts(userId) {
   const q = query(
     collection(db, ALERTS),
-    where('user_id', '==', userId),
-    orderBy('scheduled_at', 'asc')
+    where('user_id', '==', userId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return alerts.sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
 }
 
 // Create alert
