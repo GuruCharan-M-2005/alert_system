@@ -6,14 +6,15 @@ import useAuthStore from './store/authStore';
 import Login from './components/Login';
 import AlertList from './components/AlertList';
 import Privacy from './components/Privacy';
+import Terms from './components/Terms';
 import { getStoredToken, refreshAccessToken } from './services/auth';
 
 export default function App() {
   const { user, setUser, setAccessToken } = useAuthStore();
-  const isPrivacyPage = window.location.pathname === '/privacy';
+  const path = window.location.pathname;
 
   useEffect(() => {
-    if (isPrivacyPage) return;
+    if (path === '/privacy' || path === '/terms') return;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser || null);
@@ -29,9 +30,10 @@ export default function App() {
       }
     });
     return () => unsubscribe();
-  }, [setUser, setAccessToken, isPrivacyPage]);
+  }, [setUser, setAccessToken, path]);
 
-  if (isPrivacyPage) return <Privacy />;
+  if (path === '/privacy') return <Privacy />;
+  if (path === '/terms') return <Terms />;
 
   return (
     <>

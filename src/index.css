@@ -772,3 +772,75 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
 }
 
 .privacy-link:hover { text-decoration: underline; }
+
+/* ============================================================
+   LOGIN STEPS BANNER
+   ============================================================ */
+.auth-notice {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.auth-notice-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-notice-toggle:hover { background: #ECECEC; }
+
+.auth-steps {
+  padding: 14px;
+  border-top: 1.5px solid var(--border);
+  background: var(--bg);
+}
+
+.auth-steps-intro {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.auth-steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.auth-step-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.auth-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link:hover { text-decoration: underline; }

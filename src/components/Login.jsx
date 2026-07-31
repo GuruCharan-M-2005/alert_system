@@ -19,8 +19,17 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const steps = [
+  { icon: '🔐', text: 'Click "Continue with Google" below' },
+  { icon: '⚠️', text: 'Google shows a warning — click "Advanced"' },
+  { icon: '→',  text: 'Click "Go to Alertify (unsafe)"' },
+  { icon: '☑️', text: 'Check the Google Tasks checkbox' },
+  { icon: '✅', text: 'Click "Continue" — you\'re in!' },
+];
+
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
   const { setAccessToken } = useAuthStore();
 
   async function handleGoogleLogin() {
@@ -50,7 +59,36 @@ export default function Login() {
         </div>
 
         <div className="auth-form">
+          {/* First time notice */}
+          <div className="auth-notice">
+            <button
+              className="auth-notice-toggle"
+              onClick={() => setShowSteps(!showSteps)}
+            >
+              <span>⚡ First time? Read this before signing in</span>
+              <span>{showSteps ? '▲' : '▼'}</span>
+            </button>
+
+            {showSteps && (
+              <div className="auth-steps">
+                <p className="auth-steps-intro">
+                  Google will show an "unverified app" warning — that's normal.
+                  Just follow these steps:
+                </p>
+                <ol className="auth-steps-list">
+                  {steps.map((s, i) => (
+                    <li key={i} className="auth-step">
+                      <span className="auth-step-icon">{s.icon}</span>
+                      <span>{s.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+
           <div className="auth-divider" />
+
           <button
             className="btn-google"
             onClick={handleGoogleLogin}
@@ -65,8 +103,12 @@ export default function Login() {
               </>
             )}
           </button>
+
           <p className="auth-note">
-            You'll be asked to grant access to Google Tasks so we can send you alerts.
+            By signing in you agree to our{' '}
+            <a href="/privacy" className="auth-link">Privacy Policy</a>
+            {' '}and{' '}
+            <a href="/terms" className="auth-link">Terms of Service</a>.
           </p>
         </div>
       </div>
