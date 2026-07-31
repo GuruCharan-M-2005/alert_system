@@ -844,3 +844,162 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
 }
 
 .auth-link:hover { text-decoration: underline; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  border-top: 1.5px solid var(--border);
+  background: var(--bg);
+  margin-top: auto;
+}
+
+.footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-logo-mark {
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-logo-mark svg {
+  width: 12px;
+  height: 12px;
+}
+
+.footer-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-link {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.12s;
+}
+
+.footer-link:hover { color: var(--text); }
+
+.footer-sep {
+  font-size: 12px;
+  color: var(--border-dark);
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE — COMPLETE OVERHAUL
+   ============================================================ */
+@media (max-width: 560px) {
+
+  /* Auth */
+  .auth-container { padding: 16px; align-items: flex-start; padding-top: 48px; }
+  .auth-card { padding: 28px 20px 24px; }
+  .auth-logo { margin-bottom: 28px; }
+  .auth-logo-title { font-size: 22px; }
+
+  /* Navbar */
+  .navbar { height: 52px; }
+  .navbar-inner { padding: 0 16px; }
+  .nav-email { display: none; }
+  .nav-avatar { display: none; }
+  .nav-title { font-size: 14px; }
+  .nav-logo-mark { width: 24px; height: 24px; }
+  .nav-logo-mark svg { width: 13px; height: 13px; }
+  .btn-logout { font-size: 11px; padding: 4px 8px; }
+
+  /* Main */
+  .main { padding: 20px 16px 80px; }
+
+  /* Page header */
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+  .page-title { font-size: 18px; }
+  .page-sub { font-size: 11px; }
+  .page-header .btn-primary { display: none; }
+
+  /* FAB visible on mobile */
+  .fab { display: flex; align-items: center; justify-content: center; }
+
+  /* Alert cards */
+  .alert-content { padding: 10px 12px; }
+  .alert-title { font-size: 13px; }
+  .alert-time { font-size: 10px; }
+  .alert-badge { font-size: 9px; padding: 2px 6px; }
+  .action-btn { font-size: 11px; padding: 3px 8px; }
+
+  /* Section label */
+  .section-label { font-size: 9px; }
+
+  /* Modal — full bottom sheet */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-card {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+    max-width: 100%;
+    animation: sheetIn 0.22s ease;
+  }
+
+  .modal-header { padding: 16px 16px 0; }
+  .modal-body { padding: 14px 16px; gap: 12px; }
+  .modal-footer { padding: 0 16px 20px; padding-top: 14px; }
+
+  /* Chrome banner */
+  .chrome-banner-inner { padding: 10px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .chrome-banner-close { align-self: flex-end; }
+
+  /* Footer */
+  .footer-inner { padding: 12px 16px; }
+  .footer-name { font-size: 12px; }
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

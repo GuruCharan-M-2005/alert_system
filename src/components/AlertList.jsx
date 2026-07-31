@@ -84,8 +84,12 @@ export default function AlertList() {
       await deleteAlert(alert.id);
       setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
       toast.success('Alert deleted');
-    } catch {
-      toast.error('Delete failed');
+    } catch (err) {
+      if (err.message === 'TOKEN_EXPIRED') {
+        toast.error('Session expired — please sign out and sign in again.');
+      } else {
+        toast.error('Delete failed');
+      }
     } finally {
       setDeletingId(null);
     }
@@ -191,6 +195,20 @@ export default function AlertList() {
       </main>
 
       <button className="fab" onClick={() => setShowForm(true)}>+</button>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <div className="footer-logo-mark"><BellIcon /></div>
+            <span className="footer-name">Alertify</span>
+          </div>
+          <div className="footer-links">
+            <a href="/privacy" className="footer-link">Privacy</a>
+            <span className="footer-sep">·</span>
+            <a href="/terms" className="footer-link">Terms</a>
+          </div>
+        </div>
+      </footer>
 
       {(showForm || editingAlert) && (
         <AlertForm

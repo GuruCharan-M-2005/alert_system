@@ -1,89 +1,108 @@
 # Alertify — Cross-Platform Alert App
 
-PWA + Google Apps Script + OneSignal
+React PWA + Firebase + Google Tasks
 
 ---
 
-## Setup Order
+## Stack
 
-### 1. Google Sheets
-
-1. Create a new Google Sheet
-2. Rename Sheet1 → `users`, add Sheet2 → `alerts`
-3. Add headers:
-
-**users sheet (Row 1):**
-```
-id | email | password | onesignal_player_id
-```
-
-**alerts sheet (Row 1):**
-```
-id | user_id | title | message | scheduled_at | onesignal_notification_id | sent
-```
-
-4. Copy the Sheet ID from the URL:
-   `https://docs.google.com/spreadsheets/d/**SHEET_ID**/edit`
+| Layer | Tech |
+|---|---|
+| Frontend | React + Vite (PWA) |
+| Auth | Firebase Auth (Google OAuth) |
+| Database | Firebase Firestore |
+| Notifications | Google Tasks API |
+| Hosting | Firebase Hosting (auto-deploy via GitHub Actions) |
 
 ---
 
-### 2. Google Apps Script
+## How It Works
 
-1. In your Sheet → Extensions → Apps Script
-2. Paste the contents of `apps-script/Code.gs`
-3. Go to Project Settings → Script Properties → Add:
-   - `SHEET_ID` = your sheet ID
-   - `ONESIGNAL_APP_ID` = your OneSignal app ID
-   - `ONESIGNAL_REST_API_KEY` = your OneSignal REST API key
-4. Deploy → New Deployment → Web App
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-5. Copy the deployment URL
-
-> ⚠️ Every time you edit Code.gs, create a **new deployment** to pick up changes.
+- User signs in with Google
+- Create alert → saved to Firestore + created as a Google Task
+- Google Tasks app fires notification at the scheduled time
+- Edit alert → old task deleted, new task created
+- Delete alert → removed from Firestore + Google Tasks
+- Works on Android, iOS, Windows, Mac — anywhere Google Tasks is installed
 
 ---
 
-### 3. OneSignal
+## Setup
 
-1. Sign up at [onesignal.com](https://onesignal.com)
-2. New App → Web → enter your Netlify URL
-3. Settings → Keys & IDs → copy:
-   - **OneSignal App ID** → goes in `.env`
-   - **REST API Key** → goes in Apps Script Script Properties
+### 1. Firebase Project
 
----
+1. Go to [console.firebase.google.com](https://console.firebase.google.com)
+2. Create a new project
+3. Enable **Firestore Database** (test mode, asia-south1)
+4. Enable **Authentication** → Google provider
+5. Register a Web App → copy the `firebaseConfig` values
+6. Enable **Firebase Hosting**
 
-### 4. React App
+### 2. Google Tasks API
 
-1. Copy `.env.example` → `.env`
-2. Fill in:
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Select your Firebase project
+3. Search **"Google Tasks API"** → Enable
+4. APIs & Services → Credentials → copy the OAuth 2.0 Client ID
+
+### 3. Environment Variables
+
+Copy `.env.example` → `.env` and fill in:
+
 ```
-VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_ID/exec
-VITE_ONESIGNAL_APP_ID=your_onesignal_app_id
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_GOOGLE_CLIENT_ID=
 ```
-3. Install and run:
+
+### 4. GitHub Secrets
+
+Add all 7 env vars as GitHub repository secrets:
+- Repo → Settings → Secrets and variables → Actions → New repository secret
+
+### 5. Local Development
+
 ```bash
 npm install
 npm run dev
 ```
 
----
+### 6. Deploy
 
-### 5. Deploy to Netlify
+Push to `main` branch → GitHub Actions auto-builds and deploys to Firebase Hosting.
 
-1. Push to GitHub
-2. Connect repo to Netlify
-3. Add environment variables in Netlify dashboard (same as `.env`)
-4. Deploy
+Live URL: `https://YOUR_PROJECT_ID.web.app`
 
 ---
 
-## How it works
+## Firestore Structure
 
-- User registers/logs in → stored in Google Sheets
-- On login, browser registers with OneSignal → `player_id` saved to user row
-- Create alert → Apps Script writes to Sheets + calls OneSignal `send_after` API
-- OneSignal fires push notification at exact scheduled time
-- Edit alert → old notification cancelled, new one created
-- Delete alert → notification cancelled, row deleted
+**alerts collection:**
+```
+id            (auto)
+user_id       string
+title         string
+message       string
+scheduled_at  string (ISO)
+task_id       string
+list_id       string
+created_at    timestamp
+```
+
+---
+
+## For iOS Users
+
+Install **Google Tasks** from the App Store, sign in with the same Google account, and enable notifications. Alerts will arrive natively on iOS without any Apple Developer account needed.
+
+---
+
+## Pages
+
+- `/` — Main app
+- `/privacy` — Privacy Policy
+- `/terms` — Terms of Service
