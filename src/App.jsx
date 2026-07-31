@@ -5,17 +5,33 @@ import { auth } from './firebase';
 import useAuthStore from './store/authStore';
 import Login from './components/Login';
 import AlertList from './components/AlertList';
+import Privacy from './components/Privacy';
+import { getStoredToken, refreshAccessToken } from './services/auth';
 
 export default function App() {
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, setAccessToken } = useAuthStore();
+  const isPrivacyPage = window.location.pathname === '/privacy';
 
   useEffect(() => {
-    // Firebase Auth listener — persists session automatically
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    if (isPrivacyPage) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser || null);
+
+      if (firebaseUser) {
+        const stored = getStoredToken();
+        if (stored) {
+          setAccessToken(stored);
+        } else {
+          const fresh = await refreshAccessToken();
+          if (fresh) setAccessToken(fresh);
+        }
+      }
     });
     return () => unsubscribe();
-  }, [setUser]);
+  }, [setUser, setAccessToken, isPrivacyPage]);
+
+  if (isPrivacyPage) return <Privacy />;
 
   return (
     <>

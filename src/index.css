@@ -709,3 +709,66 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; border: none; outlin
   border: 1.5px solid var(--border);
   object-fit: cover;
 }
+
+/* ============================================================
+   PRIVACY PAGE
+   ============================================================ */
+.privacy-container { min-height: 100vh; }
+
+.privacy-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.privacy-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.privacy-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 40px;
+}
+
+.privacy-section {
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.privacy-section:last-child {
+  border-bottom: none;
+}
+
+.privacy-section h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.privacy-section p {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.privacy-section p:last-child { margin-bottom: 0; }
+
+.privacy-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.privacy-link:hover { text-decoration: underline; }
