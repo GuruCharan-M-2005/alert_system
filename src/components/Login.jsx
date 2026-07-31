@@ -32,6 +32,38 @@ const steps = [
   { icon: '✅', text: 'Click "Continue" — you\'re in!' },
 ];
 
+function DebugPanel() {
+  const redirect = localStorage.getItem('debug_redirect');
+  const auth = localStorage.getItem('debug_auth');
+  const err = localStorage.getItem('debug_redirect_err');
+  const pending = localStorage.getItem('alertify_redirect_pending');
+
+  if (!redirect && !auth) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: '#0A0A0A', color: '#00FF00', padding: '12px',
+      fontSize: '10px', fontFamily: 'monospace', zIndex: 9999,
+      maxHeight: '40vh', overflowY: 'auto'
+    }}>
+      <div><strong>REDIRECT:</strong> {redirect || 'none'}</div>
+      <div><strong>AUTH:</strong> {auth || 'none'}</div>
+      <div><strong>ERR:</strong> {err || 'none'}</div>
+      <div><strong>PENDING:</strong> {pending || 'none'}</div>
+      <button
+        onClick={() => {
+          ['debug_redirect','debug_auth','debug_redirect_err','alertify_redirect_pending'].forEach(k => localStorage.removeItem(k));
+          window.location.reload();
+        }}
+        style={{marginTop: '8px', padding: '4px 8px', fontSize: '10px', cursor: 'pointer'}}
+      >
+        Clear & Reload
+      </button>
+    </div>
+  );
+}
+
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showSteps, setShowSteps] = useState(false);

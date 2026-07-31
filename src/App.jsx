@@ -22,13 +22,31 @@ export default function App() {
 
     async function init() {
       // Step 1 — handle redirect result first (mobile)
-      const redirectResult = await handleRedirectResult();
-      if (redirectResult?.accessToken) {
-        setAccessToken(redirectResult.accessToken);
+      let redirectResult = null;
+      try {
+        redirectResult = await handleRedirectResult();
+        if (redirectResult?.accessToken) {
+          setAccessToken(redirectResult.accessToken);
+        }
+        // Log to localStorage so we can read it on login page
+        localStorage.setItem('debug_redirect', JSON.stringify({
+          time: new Date().toISOString(),
+          hasResult: !!redirectResult,
+          hasToken: !!redirectResult?.accessToken,
+          pendingWasSet: localStorage.getItem('alertify_redirect_pending_debug') || 'unknown'
+        }));
+      } catch (err) {
+        localStorage.setItem('debug_redirect_err', err.message);
       }
 
       // Step 2 — now listen to auth state
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        localStorage.setItem('debug_auth', JSON.stringify({
+          time: new Date().toISOString(),
+          hasUser: !!firebaseUser,
+          uid: firebaseUser?.uid || null
+        }));
+
         setUser(firebaseUser || null);
 
         if (firebaseUser) {

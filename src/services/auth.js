@@ -36,6 +36,7 @@ export async function signInWithGoogle() {
   if (isMobile()) {
     // Use localStorage — survives page redirect on mobile browsers
     localStorage.setItem(REDIRECT_PENDING_KEY, 'true');
+    localStorage.setItem('alertify_redirect_pending_debug', new Date().toISOString());
     try {
       await signInWithRedirect(auth, googleProvider);
     } catch (err) {
