@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { createAlert, updateAlert } from '../services/firestore';
-import { createTask, updateTask } from '../services/tasks';
+import { createTask, deleteTask } from '../services/tasks';
 import useAuthStore from '../store/authStore';
 import { format } from 'date-fns';
 
@@ -35,22 +35,29 @@ export default function AlertForm({ alert, onClose, onSaved }) {
       const scheduled_at = scheduled.toISOString();
 
       if (isEdit) {
-        // Update Google Task
-        await updateTask(accessToken, {
-          list_id: alert.list_id,
-          task_id: alert.task_id,
+        // Always delete old task and create fresh one
+        // (user may have deleted it manually from Google Tasks)
+        try {
+          await deleteTask(accessToken, {
+            list_id: alert.list_id,
+            task_id: alert.task_id
+          });
+        } catch (e) {
+          // Ignore — task may already be deleted
+        }
+
+        const { task_id, list_id } = await createTask(accessToken, {
           title: title.trim(),
           message: message.trim(),
           scheduled_at
         });
 
-        // Update Firestore
         await updateAlert(alert.id, {
           title: title.trim(),
           message: message.trim(),
           scheduled_at,
-          task_id: alert.task_id,
-          list_id: alert.list_id
+          task_id,
+          list_id
         });
 
         toast.success('Alert updated');
@@ -77,7 +84,11 @@ export default function AlertForm({ alert, onClose, onSaved }) {
       onSaved();
     } catch (err) {
       console.error(err);
-      toast.error('Failed to save. Try again.');
+      if (err.message === 'TOKEN_EXPIRED') {
+        toast.error('Session expired — please sign out and sign in again.');
+      } else {
+        toast.error('Failed to save. Try again.');
+      }
     } finally {
       setLoading(false);
     }

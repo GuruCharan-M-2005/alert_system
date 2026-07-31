@@ -32,7 +32,14 @@ async function getOrCreateTaskList(accessToken) {
 export async function createTask(accessToken, { title, message, scheduled_at }) {
   const listId = await getOrCreateTaskList(accessToken);
   
-  const due = new Date(scheduled_at).toISOString();
+  // Google Tasks only supports date in due field, not time
+  // So we include time in the title for clarity
+  const date = new Date(scheduled_at);
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const taskTitle = `${title} — ${timeStr}`;
+  
+  // due must be RFC 3339 date-only format
+  const due = date.toISOString().split('T')[0] + 'T00:00:00.000Z';
   
   const res = await fetch(`${BASE}/lists/${listId}/tasks`, {
     method: 'POST',
@@ -41,7 +48,7 @@ export async function createTask(accessToken, { title, message, scheduled_at }) 
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      title,
+      title: taskTitle,
       notes: message || '',
       due
     })
@@ -54,7 +61,10 @@ export async function createTask(accessToken, { title, message, scheduled_at }) 
 
 // Update an existing task
 export async function updateTask(accessToken, { list_id, task_id, title, message, scheduled_at }) {
-  const due = new Date(scheduled_at).toISOString();
+  const date = new Date(scheduled_at);
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const taskTitle = `${title} — ${timeStr}`;
+  const due = date.toISOString().split('T')[0] + 'T00:00:00.000Z';
   
   const res = await fetch(`${BASE}/lists/${list_id}/tasks/${task_id}`, {
     method: 'PATCH',
@@ -63,7 +73,7 @@ export async function updateTask(accessToken, { list_id, task_id, title, message
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      title,
+      title: taskTitle,
       notes: message || '',
       due
     })

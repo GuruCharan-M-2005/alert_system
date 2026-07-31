@@ -1,19 +1,14 @@
 import { useState } from 'react';
 
-function isWindowsChrome() {
-  const ua = navigator.userAgent;
-  return ua.includes('Windows') && ua.includes('Chrome') && !ua.includes('Edg');
-}
-
 export default function ChromeBanner() {
   const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem('chrome_banner_dismissed') === 'true'
+    () => localStorage.getItem('install_banner_dismissed') === 'true'
   );
 
-  if (dismissed || !isWindowsChrome()) return null;
+  if (dismissed) return null;
 
   function dismiss() {
-    localStorage.setItem('chrome_banner_dismissed', 'true');
+    localStorage.setItem('install_banner_dismissed', 'true');
     setDismissed(true);
   }
 
@@ -21,12 +16,11 @@ export default function ChromeBanner() {
     <div className="chrome-banner">
       <div className="chrome-banner-inner">
         <div className="chrome-banner-left">
-          <span className="chrome-banner-icon">💡</span>
+          <span className="chrome-banner-icon">📲</span>
           <div>
-            <p className="chrome-banner-title">Get alerts even when Chrome is closed</p>
+            <p className="chrome-banner-title">Get notified on all your devices</p>
             <p className="chrome-banner-sub">
-              Chrome Settings → System → turn on{' '}
-              <strong>"Continue running background apps when Google Chrome is closed"</strong>
+              Install <strong>Google Tasks</strong> on your phone, sign in with the same Google account, and enable notifications — that's it! Works on Android, Windows, Mac, and especially iOS. 🍎
             </p>
           </div>
         </div>
